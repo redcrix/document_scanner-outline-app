@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo page</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/css/jquery.Jcrop.min.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jcrop/0.9.12/js/jquery.Jcrop.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.min.js"></script>
+    <script>(function () {
+        if (document.location.hostname === 'localhost') {
+            window.isLocal = true;
+            document.write('<scr' + 'ipt src="/ng-jcrop.js?nocache=' + (new Date).getTime() + '"></scr' + 'ipt>');
+        } else {
+            window.isLocal = false;
+            document.write('<scr' + 'ipt src="https://rawgit.com/andrefarzat/ng-jcrop/master/ng-jcrop.js"></scr' + 'ipt>');
+        }
+    })();</script>
+</head>
+
+<body ng-app="ngJcropDemo">
+
+<script>
+    (function () {
+        const app = angular.module('ngJcropDemo', ['ngJcrop']);
+
+        app.config(function (ngJcropConfigProvider) {
+
+            ngJcropConfigProvider.setJcropConfig('upload', {
+                bgColor: 'black',
+                bgOpacity: .4,
+                aspectRatio: 1,
+                maxWidth: 350,
+                maxHeight: 350
+            });
+        });
+
+        app.controller('UploadController', function ($scope) {
+            $scope.obj = {src: "", selection: [], thumbnail: true};
+        });
+
+    })();
+</script>
+
+<div class="container">
+
+    <div ng-controller="UploadController">
+
+        <h4>Upload an image</h4>
+
+        <div class="row">
+
+            <div class="one-half column">
+
+                <div ng-jcrop="obj.src" ng-jcrop-config-name="upload" selection="obj.selection"
+                     thumbnail="obj.thumbnail"></div>
+
+                <table>
+                    <tbody>
+                    <tr>
+                        <td><strong>x</strong>: <span ng-bind="obj.selection[0]"></span></td>
+                        <td><strong>y</strong>: <span ng-bind="obj.selection[1]"></span></td>
+                        <td><strong>x2</strong>: <span ng-bind="obj.selection[2]"></span></td>
+                        <td><strong>y2</strong>: <span ng-bind="obj.selection[3]"></span></td>
+                        <td><strong>w</strong>: <span ng-bind="obj.selection[4]"></span></td>
+                        <td><strong>h</strong>: <span ng-bind="obj.selection[5]"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <form>
+                    <input type="file" id="file" onchange="setImageFile(event);" name="file"
+                           ng-jcrop-input="upload"/>
+
+                    <label><input type="checkbox" ng-model="obj.thumbnail"/> Thumbnail</label>
+                    <input type="button" value="Submit" onclick="uploadFile();"/>
+
+                    <input type="text" id="x" name="x" style="visibility: hidden" ng-model="obj.selection[0]">
+                    <input type="text" id="y" name="y" style="visibility: hidden" ng-model="obj.selection[1]">
+                    <input type="text" id="x2" name="x2" style="visibility: hidden" ng-model="obj.selection[2]">
+                    <input type="text" id="y2" name="y2" style="visibility: hidden" ng-model="obj.selection[3]">
+                </form>
+            </div>
+
+            <div class="one-half column">
+
+                <div id="imgContainer">
+
+                </div>
+
+                </br>
+
+                <a href="/download" id="download" style="visibility: hidden">
+                    <button class='btn btn-default'>Download in SVG </button>
+				
+					<a href="/downloads/doc/" id="download_1" style="visibility: hidden">
+						<button class='btn btn-default'>Download crop pic </button>
+				
+						<a href="/downloads/th/" id="download_2" style="visibility: hidden">
+							<button class='btn btn-default'>Download threshold pic </button>
+					
+							<a href="/downloads/resize/" id="download_3" style="visibility: hidden">
+								<button class='btn btn-default'>Download resize pic </button>
+								
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+<script>
+
+    function uploadFile() {
+        var formData = new FormData();
+        formData.append('x', $("#x")[0].value);
+        formData.append('y', $("#y")[0].value);
+        formData.append('x2', $("#x2")[0].value);
+        formData.append('y2', $("#y2")[0].value);
+        // Attach file
+        formData.append('file1', imageFile);
+        $.ajax({
+            url: "http://127.0.0.1:5000/uploader",
+            data: formData,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                console.log(data);
+                let HTMLbuilder = "";
+                const imgHtml = '<img src="http://127.0.0.1:5000/downloads/p/" width="150px" height="150px">';
+                HTMLbuilder = HTMLbuilder + imgHtml;
+                $("#imgContainer").html(HTMLbuilder);
+                document.getElementById("download").style.visibility = "visible";
+				document.getElementById("download_1").style.visibility = "visible";
+				document.getElementById("download_2").style.visibility = "visible";
+				document.getElementById("download_3").style.visibility = "visible";
+            },
+            error: function (e) {
+                console.log(e);
+            }
+        })
+    }
+
+    let imageFile;
+
+    function setImageFile(event) {
+        imageFile = event.target.files[0];
+    }
+
+</script>
+</html>
